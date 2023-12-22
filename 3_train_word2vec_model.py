@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8  -*-
 #使用gensim word2vec训练脚本获取词向量
 
 import warnings
@@ -17,9 +15,6 @@ from gensim.models.word2vec import LineSentence
 
 if __name__ == '__main__':
 
-    #print open('/Users/sy/Desktop/pyRoot/wiki_zh_vec/cmd.txt').readlines()
-    #sys.exit()
-    
     program = os.path.basename(sys.argv[0])
     logger = logging.getLogger(program)
 
@@ -27,17 +22,15 @@ if __name__ == '__main__':
     logger.info("running %s" % ' '.join(sys.argv))
 
     # inp为输入语料, outp1 为输出模型, outp2为原始c版本word2vec的vector格式的模型
-    fdir = '/Users/sy/Desktop/pyRoot/wiki_zh_vec/'
-    inp = fdir + 'wiki.zh.simp.seg.txt'
-    outp1 = fdir + 'wiki.zh.text.model'
-    outp2 = fdir + 'wiki.zh.text.vector'
+    
+    inp =  'wiki.zh.simp.seg.only_chinese.txt'
+    outp1 = 'wiki.zh.text.model'
+    outp2 = 'wiki.zh.text.vector'
 
     # 训练skip-gram模型
-    model = Word2Vec(LineSentence(inp), size=400, window=5, min_count=5,
+    model = Word2Vec(LineSentence(inp),  vector_size=400, window=5, min_count=5,
                      workers=multiprocessing.cpu_count())
 
     # 保存模型
     model.save(outp1)
     model.wv.save_word2vec_format(outp2, binary=False)
-
-
