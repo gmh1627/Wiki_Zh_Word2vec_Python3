@@ -1,25 +1,9 @@
 # 构建Wiki中文语料词向量模型试验(python3)
 
->本实例主要介绍的是选取wiki中文语料，并使用python完成Word2vec模型构建的实践过程，不包含原理部分，旨在一步一步的了解自然语言处理的基本方法和步骤。文章主要包含了开发环境准备、数据的获取、数据的预处理、模型构建和模型测试四大内容，对应的是实现模型构建的五个步骤。
+>本实例主要介绍的是选取wiki中文语料，并使用python3完成Word2vec模型构建的实践过程，不包含原理部分，旨在一步一步的了解自然语言处理的基本方法和步骤。文章主要包含了开发环境准备、数据的获取、数据的预处理、模型构建和模型测试四大内容，对应的是实现模型构建的五个步骤。
 
 ## 一、 开发环境准备
-#### 1.1  python环境
-在[python官网](https://www.python.org/downloads/)下载计算机对应的python版本，本人使用的是Python2.7.13的版本。
-#### 1.2  gensim模块
-
-###### （1）下载模块
-Word2vec需要使用第三方gensim模块， gensim模块依赖numpy和scipy两个包，因此需要依次下载对应版本的numpy、scipy、gensim。下载地址：http://www.lfd.uci.edu/~gohlke/pythonlibs/
-
-###### （2）安装模块
-下载完成后，在python安装目录下的Scripts目录中执行cmd命令进行安装。
-
-        pip install numpy 
-        pip install scipy 
-        pip install gensim 
-
-###### （3）验证模块是否安装成功
-输入python命令进入python命令行，分别输入“import numpy; import scipy; import gensim; ”没有报错，即安装成功！
-
+笔者使用的是anaconda环境下的python 3.10.13。
 ## 二、Wiki数据获取
 #### 2.1  Wiki中文数据的下载
 到wiki官网下载中文语料，下载完成后会得到命名为zhwiki-latest-pages-articles.xml.bz2的文件，大小约为1.3G，里面是一个XML文件。
@@ -28,48 +12,66 @@ Word2vec需要使用第三方gensim模块， gensim模块依赖numpy和scipy两�
 ###### （1）python实现
 编写python程序将XML文件转换为text格式，使用到了gensim.corpora中的WikiCorpus函数来处理维基百科的数据。python代码实现如下所示，文件命名为1_process.py。
 
-![1_process.py--wiki文件转换代码](http://upload-images.jianshu.io/upload_images/5189322-1b6bb41bafe0cb82.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+        #将xml的wiki数据转换为text格式
+
+        """
+        This script converts XML wiki data to text format.
+        """
+        
+        import logging
+        import os.path
+        import sys
+        
+        from gensim.corpora import WikiCorpus
+        from nltk.stem import WordNetLemmatizer
+        from nltk.tokenize import word_tokenize
+        import nltk
+        
+        def lemmatize(text, tokens, lemmatize, lowercase):
+        lemmatizer = WordNetLemmatizer()
+        return [lemmatizer.lemmatize(word) for word in word_tokenize(text)]
+
+        if __name__ == '__main__':
+            nltk.download('wordnet')
+            nltk.download('omw-1.4')
+            
+            program = os.path.basename(sys.argv[0])#得到文件名
+            logger = logging.getLogger(program)
+        
+            logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s')
+            logging.root.setLevel(level=logging.INFO)
+            logger.info("running %s" % ' '.join(sys.argv))
+        
+            if len(sys.argv) < 3:
+                print (globals()['__doc__'] % locals())
+                sys.exit(1)
+        
+            inp, outp = sys.argv[1:3]
+            space = " "
+            i = 0
+        
+            output = open(outp, 'w', encoding='utf-8')
+            wiki =WikiCorpus(inp, tokenizer_func=lemmatize, dictionary=[])#gensim里的维基百科处理类WikiCorpus
+            for text in wiki.get_texts():#通过get_texts将维基里的每篇文章转换位1行text文本，并且去掉了标点符号等内容
+                output.write(space.join(text) + "\n")
+                i = i+1
+                if (i % 10000 == 0):
+                    logger.info("Saved "+str(i)+" articles.")
+        
+            output.close()
+            logger.info("Finished Saved "+str(i)+" articles.")
 
 ###### （2）运行程序文件
-在代码文件夹下运行如下cmd命令行，即可得到转换后生成的文件wiki.zh.txt。
+在代码文件夹下运行如下anaconda prompt命令行，即可得到转换后生成的文件wiki.zh.txt。
 
-        D:\PyRoot\iDemo\wiki_zh>python 1_process.py zhwiki-latest-pages-articles.xml.bz2 wiki.zh.txt
+        D:\wiki_zh>python 1_process.py zhwiki-latest-pages-articles.xml.bz2 wiki.zh.txt
 
 ###### （3）得到运行结果
 
-       2017-04-18 09:24:28,901: INFO: running 1_process.py zhwiki-latest-pages-articles.xml.bz2 wiki.zh.txt
-       2017-04-18 09:25:31,154: INFO: Saved 10000 articles.
-       2017-04-18 09:26:21,582: INFO: Saved 20000 articles.
-       2017-04-18 09:27:05,642: INFO: Saved 30000 articles.
-       2017-04-18 09:27:48,917: INFO: Saved 40000 articles.
-       2017-04-18 09:28:35,546: INFO: Saved 50000 articles.
-       2017-04-18 09:29:21,102: INFO: Saved 60000 articles.
-       2017-04-18 09:30:04,540: INFO: Saved 70000 articles.
-       2017-04-18 09:30:48,022: INFO: Saved 80000 articles.
-       2017-04-18 09:31:30,665: INFO: Saved 90000 articles.
-       2017-04-18 09:32:17,599: INFO: Saved 100000 articles.
-       2017-04-18 09:33:13,811: INFO: Saved 110000 articles.
-       2017-04-18 09:34:06,316: INFO: Saved 120000 articles.
-       2017-04-18 09:35:01,007: INFO: Saved 130000 articles.
-       2017-04-18 09:35:52,628: INFO: Saved 140000 articles.
-       2017-04-18 09:36:47,148: INFO: Saved 150000 articles.
-       2017-04-18 09:37:41,137: INFO: Saved 160000 articles.
-       2017-04-18 09:38:33,684: INFO: Saved 170000 articles.
-       2017-04-18 09:39:37,957: INFO: Saved 180000 articles.
-       2017-04-18 09:43:36,299: INFO: Saved 190000 articles.
-       2017-04-18 09:45:21,509: INFO: Saved 200000 articles.
-       2017-04-18 09:46:40,865: INFO: Saved 210000 articles.
-       2017-04-18 09:47:55,453: INFO: Saved 220000 articles.
-       2017-04-18 09:49:07,835: INFO: Saved 230000 articles.
-       2017-04-18 09:50:27,562: INFO: Saved 240000 articles.
-       2017-04-18 09:51:38,755: INFO: Saved 250000 articles.
-       2017-04-18 09:52:50,240: INFO: Saved 260000 articles.
-       2017-04-18 09:53:57,526: INFO: Saved 270000 articles.
-       2017-04-18 09:55:01,720: INFO: Saved 280000 articles.
-       2017-04-18 09:55:22,565: INFO: finished iterating over Wikipedia corpus of 28285 5 documents with 63427579 positions (total 2908316 articles, 75814559 positions before pruning articles shorter than 50 words)
-       2017-04-18 09:55:22,568: INFO: Finished Saved 282855 articles.
+      
+       
 
-由结果可知，31分钟运行完成282855篇文章，得到一个931M的txt文件。
+由结果可知，95分钟运行完成429467篇文章，得到一个2.38G的txt文件。
 
 ## 三、Wiki数据预处理
 #### 3.1  中文繁体替换成简体
@@ -80,9 +82,21 @@ Wiki中文语料中包含了很多繁体字，需要转成简体字再进行处�
 
 ###### （2）使用OpenCC进行繁简转换
 
+        from opencc import OpenCC
+        # 初始化转换器，t2s表示从繁体转简体
+        cc = OpenCC('t2s')
+        # 打开简体中文文档进行写入
+        with open('wiki.zh.simp.txt', 'w', encoding='utf-8') as out_f:
+            # 分批读取繁体中文文档
+            with open('wiki.zh.txt', 'r', encoding='utf-8') as in_f:
+                for line in in_f:
+                    # 转换为简体中文
+                    simplified_chinese = cc.convert(line)
+                    # 写入简体中文
+                    out_f.write(simplified_chinese)
 
 ###### （3）结果查看
-解压后的txt有900多M，用notepad++无法打开，所以采用python自带的IO进行读取。Python代码如下：
+解压后的txt文件有2.38G，用记事本和vscode无法打开，所以采用python自带的IO进行读取。Python代码如下：
 
        import codecs,sys
        f = codecs.open('wiki.zh.simp.txt','r',encoding="utf8")
@@ -117,14 +131,20 @@ Python实现代码如下：
 
 ###### （2）运行结果查看
 
-       2017-05-03 21:54:14,887: INFO: training on 822697865 raw words (765330910 effective words) took 1655.2s, 462390 effective words/s
-       2017-05-03 21:54:14,888: INFO: saving Word2Vec object under /Users/sy/Desktop/pyRoot/wiki_zh_vec/wiki.zh.text.model, separately None
-       2017-05-03 21:54:14,888: INFO: not storing attribute syn0norm
-       2017-05-03 21:54:14,889: INFO: storing np array 'syn0' to /Users/sy/Desktop/pyRoot/wiki_zh_vec/wiki.zh.text.model.wv.syn0.npy
-       2017-05-03 21:54:16,505: INFO: storing np array 'syn1neg' to /Users/sy/Desktop/pyRoot/wiki_zh_vec/wiki.zh.text.model.syn1neg.npy
-       2017-05-03 21:54:18,123: INFO: not storing attribute cum_table
-       2017-05-03 21:54:26,542: INFO: saved /Users/sy/Desktop/pyRoot/wiki_zh_vec/wiki.zh.text.model
-       2017-05-03 21:54:26,543: INFO: storing 733434x400 projection weights into /Users/sy/Desktop/pyRoot/wiki_zh_vec/wiki.zh.text.vector
+        2023-12-21 22:18:08,959: INFO: EPOCH 4 - PROGRESS: at 97.67% examples, 1161152 words/s, in_qsize 0, out_qsize 0
+        2023-12-21 22:18:09,949: INFO: EPOCH 4 - PROGRESS: at 98.19% examples, 1161166 words/s, in_qsize 0, out_qsize 0
+        2023-12-21 22:18:10,954: INFO: EPOCH 4 - PROGRESS: at 98.62% examples, 1161167 words/s, in_qsize 1, out_qsize 1
+        2023-12-21 22:18:11,969: INFO: EPOCH 4 - PROGRESS: at 99.08% examples, 1161201 words/s, in_qsize 0, out_qsize 2
+        2023-12-21 22:18:12,985: INFO: EPOCH 4 - PROGRESS: at 99.57% examples, 1161201 words/s, in_qsize 0, out_qsize 2
+        2023-12-21 22:18:13,829: INFO: EPOCH 4: training on 341900989 raw words (304853155 effective words) took 262.5s, 1161367 effective words/s
+        2023-12-21 22:18:13,829: INFO: Word2Vec lifecycle event {'msg': 'training on 1709504945 raw words (1524238644 effective words) took 1325.4s, 1150013 effective words/s', 'datetime': '2023-12-21T22:18:13.829158', 'gensim': '4.3.0', 'python': '3.10.13 | packaged by Anaconda, Inc. | (main, Sep 11 2023, 13:24:38) [MSC v.1916 64 bit (AMD64)]', 'platform': 'Windows-10-10.0.22000-SP0', 'event': 'train'}
+        2023-12-21 22:18:13,829: INFO: Word2Vec lifecycle event {'params': 'Word2Vec<vocab=828204, vector_size=400, alpha=0.025>', 'datetime': '2023-12-21T22:18:13.829158', 'gensim': '4.3.0', 'python': '3.10.13 | packaged by Anaconda, Inc. | (main, Sep 11 2023, 13:24:38) [MSC v.1916 64 bit (AMD64)]', 'platform': 'Windows-10-10.0.22000-SP0', 'event': 'created'}
+        2023-12-21 22:18:13,829: INFO: Word2Vec lifecycle event {'fname_or_handle': 'wiki.zh.text.model', 'separately': 'None', 'sep_limit': 10485760, 'ignore': frozenset(), 'datetime': '2023-12-21T22:18:13.829158', 'gensim': '4.3.0', 'python': '3.10.13 | packaged by Anaconda, Inc. | (main, Sep 11 2023, 13:24:38) [MSC v.1916 64 bit (AMD64)]', 'platform': 'Windows-10-10.0.22000-SP0', 'event': 'saving'}
+        2023-12-21 22:18:13,841: INFO: storing np array 'vectors' to wiki.zh.text.model.wv.vectors.npy
+        2023-12-21 22:18:14,584: INFO: storing np array 'syn1neg' to wiki.zh.text.model.syn1neg.npy
+        2023-12-21 22:18:15,410: INFO: not storing attribute cum_table
+        2023-12-21 22:18:15,948: INFO: saved wiki.zh.text.model
+        2023-12-21 22:18:16,616: INFO: storing 828204x400 projection weights into wiki.zh.text.vector
 
 摘取了最后几行代码运行信息，代码运行完成后得到如下四个文件，其中wiki.zh.text.model是建好的模型，wiki.zh.text.vector是词向量。
 
@@ -133,10 +153,33 @@ Python实现代码如下：
 ## 五、模型测试
 模型训练好后，来测试模型的结果。Python代码如下，文件名为4_model_match.py。
 
-![4_model_match.py--模型测试代码](http://upload-images.jianshu.io/upload_images/5189322-b5e2a021a678d254.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+        #测试训练好的模型
+        
+        import warnings
+        warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')# 忽略警告
+        import sys  
+        import gensim
+        
+        
+        if __name__ == '__main__':
+            model = gensim.models.Word2Vec.load('wiki.zh.text.model')
 
+            word = model.wv.most_similar(u"足球")
+            for t in word:
+                print(t[0],t[1])
+        
+            '''
+            word = model.most_similar(positive=[u'皇上',u'国王'],negative=[u'皇后'])
+            for t in word:
+                print t[0],t[1]
+        
+        
+            print model.doesnt_match(u'太后 妃子 贵人 贵妃 才人'.split())
+            print model.similarity(u'书籍',u'书本')
+            print model.similarity(u'逛街',u'书本')
+            '''
 运行文件得到结果，即可查看给定词的相关词。
 
-![模型匹配结果](http://upload-images.jianshu.io/upload_images/5189322-4edbb0c058ba5a51.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+        
 
 > 至此，使用python对中文wiki语料的词向量建模就全部结束了，wiki.zh.text.vector中是每个词对应的词向量，可以在此基础上作文本特征的提取以及分类。所有代码都已上传至[本人GitHub](https://github.com/AimeeLee77/wiki_zh_word2vec)中，欢迎指教！
