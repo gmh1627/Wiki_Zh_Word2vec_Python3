@@ -1,20 +1,7 @@
-1_process.py£º
+1_process.pyï¼š
 python 1_process.py zhwiki-latest-pages-articles.xml.bz2 wiki.zh.txt
 
-opencc:
-opencc -i  D:\PyRoot\iDemo\wiki_zh\wiki.zh.txt -o D:\PyRoot\iDemo\wiki_zh\wiki.zh.simp.txt -c t2s.json
-
-3_train_word2vec_model.py£º
-python 3_train_word2vec_model.py wiki.zh.simp.seg.txt wiki.zh.model wiki.zh.vector
-
-
-
-±¸×¢£º
-wiki.zh.txtÎªwikiÖĞÎÄÓïÁÏÔ´ÎÄ¼ş
-wiki.zh.simp.txtÎªwikiÖĞÎÄÓïÁÏ·±Ìå×ª»»³É¼òÌåºóµÄÎÄ¼ş
-wiki.zh.simp.seg.txtÎªwikiÖĞÎÄÓïÁÏ¼òÌå·Ö´ÊºóµÄ½á¹û
-
-
-
-
-
+å¤‡æ³¨ï¼š
+wiki.zh.txtä¸ºwikiä¸­æ–‡è¯­æ–™æºæ–‡ä»¶
+wiki.zh.simp.txtä¸ºwikiä¸­æ–‡è¯­æ–™ç¹ä½“è½¬æ¢æˆç®€ä½“åçš„æ–‡ä»¶
+wiki.zh.simp.seg.txtä¸ºwikiä¸­æ–‡è¯­æ–™ç®€ä½“åˆ†è¯åçš„ç»“æœ
