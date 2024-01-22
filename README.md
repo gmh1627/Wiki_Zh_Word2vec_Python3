@@ -6,7 +6,7 @@
 笔者使用的是anaconda环境下的python 3.10.13。
 ## 二、Wiki数据获取
 #### 2.1  Wiki中文数据的下载
-到wiki官网下载中文语料，下载完成后会得到命名为zhwiki-latest-pages-articles.xml.bz2的文件，大小约为1.3G，里面是一个XML文件。
+到wiki官网下载中文语料，下载完成后会得到命名为zhwiki-latest-pages-articles.xml.bz2的文件，大小约为2.56G，里面是一个XML文件。
 下载地址如下：https://dumps.wikimedia.org/zhwiki/latest/zhwiki-latest-pages-articles.xml.bz2
 #### 2.2  将XML的Wiki数据转换为text格式
 ###### （1）python实现
@@ -68,10 +68,9 @@
 
 ###### （3）得到运行结果
 
-      
-       
+![运行结果](2.jpg)
 
-由结果可知，95分钟运行完成429467篇文章，得到一个2.38G的txt文件。
+由结果可知，95分钟运行完成911348篇文章，得到一个2.38G的txt文件。
 
 ## 三、Wiki数据预处理
 #### 3.1  中文繁体替换成简体
@@ -96,38 +95,89 @@ Wiki中文语料中包含了很多繁体字，需要转成简体字再进行处�
                     out_f.write(simplified_chinese)
 
 ###### （3）结果查看
-解压后的txt文件有2.38G，用记事本和vscode无法打开，所以采用python自带的IO进行读取。Python代码如下：
+转化后的txt文件有2.38G，用记事本和vscode无法打开，所以采用python自带的IO进行读取。Python代码如下：
 
        import codecs,sys
        f = codecs.open('wiki.zh.simp.txt','r',encoding="utf8")
        line = f.readline()
        print(line)
 
-繁体中文示例截图如下所示：
-
-![wiki原始数据](http://upload-images.jianshu.io/upload_images/5189322-9013a0fac8db5ddf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
-转换后的简体中文截图如下所示：
-
-
-![Wiki转换后简体数据](http://upload-images.jianshu.io/upload_images/5189322-436f4b00d2e6f884.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 #### 3.2  结巴分词
 本例中采用结巴分词对字体简化后的wiki中文语料数据集进行分词，在执行代码前需要安装jieba模块。由于此语料已经去除了标点符号，因此在分词程序中无需进行清洗操作，可直接分词。若是自己采集的数据还需进行标点符号去除和去除停用词的操作。
 Python实现代码如下：
 
-![2_jieba_participle.py--结巴分词代码](http://upload-images.jianshu.io/upload_images/5189322-6869923d883432af.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+        #逐行读取文件数据进行jieba分词
 
-代码执行完成后得到一个1.12G大小的文档wiki.zh.simp.seg.txt。分词结果截图如下所示：
+        import jieba
+        import jieba.analyse
+        import jieba.posseg as pseg #引入词性标注接口 
+        import codecs,sys
+        
+        
+        if __name__ == '__main__':
+            f = codecs.open('wiki.zh.simp.txt', 'r', encoding='utf8')
+            target = codecs.open('wiki.zh.simp.seg.txt', 'w', encoding='utf8')
+            print ('open files.')
 
-![Wiki结巴分词](http://upload-images.jianshu.io/upload_images/5189322-21bb23f5ee18cd74.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+            lineNum = 1
+            line = f.readline()
+            while line:
+                print ('---processing ',lineNum,' article---')
+                seg_list = jieba.cut(line,cut_all=False)
+                line_seg = ' '.join(seg_list)
+                target.writelines(line_seg)
+                lineNum = lineNum + 1
+                line = f.readline()
+        
+            print ("well done.")
+            f.close()
+            target.close()
+        
+代码执行完成后得到一个3.01G大小的文档wiki.zh.simp.seg.txt。分词结果截图如下所示：
 
+![Wiki结巴分词](1.jpg)
 
 ## 四、Word2Vec模型训练
 ######  （1）word2vec模型实现
-分好词的文档即可进行word2vec词向量模型的训练了。文档较大，本人在4GWin7的电脑中报内存的错误，更换成8G内容的Mac后即可训练完成，且速度很快。具体Python代码实现如下所示，文件命名为3_train_word2vec_model.py。
+分好词的文档即可进行word2vec词向量模型的训练了。文档较大，需要用内存为8G或16G的电脑来跑。具体Python代码实现如下所示，文件命名为3_train_word2vec_model.py。
 
-![3_train_word2vec_model.py--模型训练代码](http://upload-images.jianshu.io/upload_images/5189322-5e3ee99d7d7dbbe6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+        #使用gensim word2vec训练脚本获取词向量
+        
+        import warnings
+        warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')# 忽略警告
+        
+        import logging
+        import os.path
+        import sys
+        import multiprocessing
+        
+        from gensim.corpora import WikiCorpus
+        from gensim.models import Word2Vec
+        from gensim.models.word2vec import LineSentence
+        
+        
+        if __name__ == '__main__':
+        
+            program = os.path.basename(sys.argv[0])
+            logger = logging.getLogger(program)
+        
+            logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s',level=logging.INFO)
+            logger.info("running %s" % ' '.join(sys.argv))
+        
+            # inp为输入语料, outp1 为输出模型, outp2为原始c版本word2vec的vector格式的模型
+            
+            inp =  'wiki.zh.simp.seg.only_chinese.txt'
+            outp1 = 'wiki.zh.text.model'
+            outp2 = 'wiki.zh.text.vector'
+        
+            # 训练skip-gram模型
+            model = Word2Vec(LineSentence(inp),  vector_size=400, window=5, min_count=5,
+                             workers=multiprocessing.cpu_count())
+        
+            # 保存模型
+            model.save(outp1)
+            model.wv.save_word2vec_format(outp2, binary=False)
 
 ###### （2）运行结果查看
 
@@ -146,12 +196,10 @@ Python实现代码如下：
         2023-12-21 22:18:15,948: INFO: saved wiki.zh.text.model
         2023-12-21 22:18:16,616: INFO: storing 828204x400 projection weights into wiki.zh.text.vector
 
-摘取了最后几行代码运行信息，代码运行完成后得到如下四个文件，其中wiki.zh.text.model是建好的模型，wiki.zh.text.vector是词向量。
-
-![生成模型](http://upload-images.jianshu.io/upload_images/5189322-56e2d3cbbfa427b8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+摘取了最后几行代码运行信息，代码运行完成后得到四个文件，其中wiki.zh.text.model是建好的模型，wiki.zh.text.vector是词向量。
 
 ## 五、模型测试
-模型训练好后，来测试模型的结果。Python代码如下，文件名为4_model_match.py。
+模型训练好后，测试模型的结果。Python代码如下，文件名为4_model_match.py。
 
         #测试训练好的模型
         
@@ -180,6 +228,4 @@ Python实现代码如下：
             '''
 运行文件得到结果，即可查看给定词的相关词。
 
-        
-
-> 至此，使用python对中文wiki语料的词向量建模就全部结束了，wiki.zh.text.vector中是每个词对应的词向量，可以在此基础上作文本特征的提取以及分类。所有代码都已上传至[本人GitHub](https://github.com/AimeeLee77/wiki_zh_word2vec)中，欢迎指教！
+> 至此，使用python对中文wiki语料的词向量建模就全部结束了，wiki.zh.text.vector中是每个词对应的词向量，可以在此基础上作文本特征的提取以及分类。所有代码都已上传至[本人GitHub](https://github.com/gmh1627/Wiki_Zh_Word2vec_Python3/edit/)中，欢迎指教！
