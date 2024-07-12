@@ -12,54 +12,54 @@
 ###### （1）python实现
 编写python程序将XML文件转换为text格式，使用到了gensim.corpora中的WikiCorpus函数来处理维基百科的数据。python代码实现如下所示，文件命名为1_process.py。
 
-        #将xml的wiki数据转换为text格式
+#将xml的wiki数据转换为text格式
 
-        """
-        This script converts XML wiki data to text format.
-        """
-        
-        import logging
-        import os.path
-        import sys
-        
-        from gensim.corpora import WikiCorpus
-        from nltk.stem import WordNetLemmatizer
-        from nltk.tokenize import word_tokenize
-        import nltk
-        
-        def lemmatize(text, tokens, lemmatize, lowercase):
-        lemmatizer = WordNetLemmatizer()
-        return [lemmatizer.lemmatize(word) for word in word_tokenize(text)]
+"""
+This script converts XML wiki data to text format.
+"""
 
-        if __name__ == '__main__':
-            nltk.download('wordnet')
-            nltk.download('omw-1.4')
-            
-            program = os.path.basename(sys.argv[0])#得到文件名
-            logger = logging.getLogger(program)
-        
-            logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s')
-            logging.root.setLevel(level=logging.INFO)
-            logger.info("running %s" % ' '.join(sys.argv))
-        
-            if len(sys.argv) < 3:
-                print (globals()['__doc__'] % locals())
-                sys.exit(1)
-        
-            inp, outp = sys.argv[1:3]
-            space = " "
-            i = 0
-        
-            output = open(outp, 'w', encoding='utf-8')
-            wiki =WikiCorpus(inp, tokenizer_func=lemmatize, dictionary=[])#gensim里的维基百科处理类WikiCorpus
-            for text in wiki.get_texts():#通过get_texts将维基里的每篇文章转换位1行text文本，并且去掉了标点符号等内容
-                output.write(space.join(text) + "\n")
-                i = i+1
-                if (i % 10000 == 0):
-                    logger.info("Saved "+str(i)+" articles.")
-        
-            output.close()
-            logger.info("Finished Saved "+str(i)+" articles.")
+import logging
+import os.path
+import sys
+
+from gensim.corpora import WikiCorpus
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+import nltk
+
+def lemmatize(text, tokens, lemmatize, lowercase):
+lemmatizer = WordNetLemmatizer()
+return [lemmatizer.lemmatize(word) for word in word_tokenize(text)]
+
+if __name__ == '__main__':
+    nltk.download('wordnet')
+    nltk.download('omw-1.4')
+    
+    program = os.path.basename(sys.argv[0])#得到文件名
+    logger = logging.getLogger(program)
+
+    logging.basicConfig(format='%(asctime)s: %(levelname)s: %(message)s')
+    logging.root.setLevel(level=logging.INFO)
+    logger.info("running %s" % ' '.join(sys.argv))
+
+    if len(sys.argv) < 3:
+        print (globals()['__doc__'] % locals())
+        sys.exit(1)
+
+    inp, outp = sys.argv[1:3]
+    space = " "
+    i = 0
+
+    output = open(outp, 'w', encoding='utf-8')
+    wiki =WikiCorpus(inp, tokenizer_func=lemmatize, dictionary=[])#gensim里的维基百科处理类WikiCorpus
+    for text in wiki.get_texts():#通过get_texts将维基里的每篇文章转换位1行text文本，并且去掉了标点符号等内容
+        output.write(space.join(text) + "\n")
+        i = i+1
+        if (i % 10000 == 0):
+            logger.info("Saved "+str(i)+" articles.")
+
+    output.close()
+    logger.info("Finished Saved "+str(i)+" articles.")
 
 ###### （2）运行程序文件
 在代码文件夹下运行如下anaconda prompt命令行，即可得到转换后生成的文件wiki.zh.txt。
