@@ -137,6 +137,28 @@ Python实现代码如下：
 代码执行完成后得到一个3.01G大小的文档wiki.zh.simp.seg.txt。分词结果截图如下所示：
 
 ![Wiki结巴分词](1.jpg)
+#### 3.3 去除非中文字符
+
+```python
+import re
+
+# 定义一个函数来过滤非中文字符，并将一连串的非中文字符替换为单个空格
+def filter_non_chinese(text):
+    # 正则表达式匹配一连串的非中文字符，[\u4e00-\u9fa5]是中文字符的Unicode范围
+    # 使用re.sub替换一连串的非中文字符为一个空格
+    filtered_text = re.sub(r'[^\u4e00-\u9fa5]+', ' ', text)
+    return filtered_text
+
+# 打开原始文件和目标文件
+with open('wiki.zh.simp.txt', 'r', encoding='utf-8') as source_file, \
+     open('wiki.zh.simp.seg.only_chinese.txt', 'w', encoding='utf-8') as target_file:
+    # 逐行读取和处理
+    for line in source_file:
+        # 过滤当前行的非中文字符，并将一连串的非中文字符替换为单个空格
+        filtered_line = filter_non_chinese(line)
+        # 将处理后的行写入新文件
+        target_file.write(filtered_line + '\n')  # 添加换行符以保持原有的行结构
+```
 
 ## 四、Word2Vec模型训练
 ######  （1）word2vec模型实现
