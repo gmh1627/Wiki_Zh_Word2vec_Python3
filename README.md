@@ -1,4 +1,4 @@
-# 构建Wiki中文语料词向量模型(python3)
+![image](https://github.com/user-attachments/assets/e3910dc9-717b-43ee-ab64-a8363546ae66)# 构建Wiki中文语料词向量模型(python3)
 
 >本实例主要介绍的是选取wiki中文语料，并使用python3完成Word2vec模型构建的实践过程，不包含原理部分，旨在一步一步的了解自然语言处理的基本方法和步骤。文章主要包含了开发环境准备、数据的获取、数据的预处理、模型构建和模型测试四大内容，对应的是实现模型构建的五个步骤。
 
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     lineNum = 1
     line = f.readline()
     while line:
-        print ('---processing ',lineNum,' article---')
+        print ('---processed ',lineNum,' articles---')
         seg_list = jieba.cut(line,cut_all=False)
         line_seg = ' '.join(seg_list)
         target.writelines(line_seg)
